@@ -26,43 +26,49 @@ export async function GET(request: Request) {
     const tokenData = await tokenResponse.json();
     const token = tokenData.access_token;
 
-    // 2. Buscar no Mercado Livre fingindo ser o Googlebot (Eles nunca bloqueiam o Google)
+    // 2. Busca Real no Mercado Livre (Usando um servidor diferente ou cabeçalhos limpos)
     const mlResponse = await fetch(
       `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=15`,
       {
         headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-          "Accept": "application/json",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
         },
       }
     );
 
     const mlData = await mlResponse.json();
-    const mlResults = mlData.results || [];
+    const mlResults = (mlData.results || []).map((item: any) => ({
+      id: `ml-${item.id}`,
+      title: item.title,
+      price: item.price,
+      permalink: item.permalink, // LINK REAL DO MERCADO LIVRE
+      thumbnail: item.thumbnail?.replace("http://", "https://") || "",
+      source: "Mercado Livre",
+    }));
 
-    // 3. Simulação de Motor de Busca Google Shopping (Outras Lojas)
-    // Em um cenário de produção real, usaríamos a SerpApi.com para pegar esses dados reais do Google
-    const otherStores = [
+    // 3. Gerador de Links Diretos (Deep Links) para outras lojas
+    // Isso garante que você clique e já caia na busca da loja
+    const directLinks = [
       {
-        id: `amz-${Date.now()}`,
-        title: `${query} - Oferta Amazon`,
-        price: (mlResults[0]?.price || 500) * 0.98,
-        permalink: `https://www.amazon.com.br/s?k=${encodeURIComponent(query)}`,
+        id: `amz-link`,
+        title: `Ver "${query}" na Amazon`,
+        price: 0,
+        permalink: `https://www.amazon.com.br/s?k=${encodeURIComponent(query)}&ref=oficinapro`,
         thumbnail: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
         source: "Amazon",
       },
       {
-        id: `mgl-${Date.now()}`,
-        title: `${query} - Magalu Prime`,
-        price: (mlResults[0]?.price || 500) * 1.05,
+        id: `mgl-link`,
+        title: `Ver "${query}" no Magalu`,
+        price: 0,
         permalink: `https://www.magazineluiza.com.br/busca/${encodeURIComponent(query)}/`,
         thumbnail: "https://logodownload.org/wp-content/uploads/2014/04/magazine-luiza-logo-0.png",
         source: "Magazine Luiza",
       },
       {
-        id: `shp-${Date.now()}`,
-        title: `${query} - Shopee Oficial`,
-        price: (mlResults[0]?.price || 500) * 0.92,
+        id: `shp-link`,
+        title: `Ver "${query}" na Shopee`,
+        price: 0,
         permalink: `https://shopee.com.br/search?keyword=${encodeURIComponent(query)}`,
         thumbnail: "https://logodownload.org/wp-content/uploads/2021/03/shopee-logo-0.png",
         source: "Shopee",
@@ -70,8 +76,9 @@ export async function GET(request: Request) {
     ];
 
     return NextResponse.json({
-      results: [...mlResults, ...otherStores],
+      results: [...mlResults, ...directLinks],
     });
+
 
   } catch (error) {
     console.error("Erro na busca segura:", error);

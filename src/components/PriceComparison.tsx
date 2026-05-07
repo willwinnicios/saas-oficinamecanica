@@ -157,11 +157,17 @@ export function PriceComparison({ initialQuery = "" }: PriceComparisonProps) {
                       </div>
                       <div className="mt-1 flex items-baseline gap-2">
                         <span className="text-2xl font-black text-foreground">
-                          R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          {item.price > 0 
+                            ? `R$ ${item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
+                            : "Preço sob consulta"}
                         </span>
-                        <span className="text-xs text-muted">no PIX</span>
+                        {item.price > 0 && <span className="text-xs text-muted">no PIX</span>}
                       </div>
-                      <p className="text-[10px] text-muted">ou 10x de R$ {(item.price / 10).toFixed(2)}</p>
+                      {item.price > 0 ? (
+                        <p className="text-[10px] text-muted">ou 10x de R$ {(item.price / 10).toFixed(2)}</p>
+                      ) : (
+                        <p className="text-[10px] text-primary font-bold">Link de busca direta ativo</p>
+                      )}
                     </div>
                   </div>
 
@@ -174,12 +180,16 @@ export function PriceComparison({ initialQuery = "" }: PriceComparisonProps) {
                       href={item.permalink} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="bg-primary text-white hover:bg-primary/90 px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 group-hover:scale-105 active:scale-95 shadow-lg"
+                      className={cn(
+                        "px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 group-hover:scale-105 active:scale-95 shadow-lg",
+                        item.price > 0 ? "bg-primary text-white hover:bg-primary/90" : "bg-slate-700 text-white hover:bg-slate-600"
+                      )}
                     >
-                      Ir à loja
+                      {item.price > 0 ? "Ir à loja" : "Ver no site"}
                       <ChevronRight size={16} />
                     </a>
                   </div>
+
                 </div>
               ))}
             </div>
