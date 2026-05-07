@@ -17,20 +17,27 @@ export async function searchGlobalPrices(query: string): Promise<SearchResult[]>
 
   try {
     // 1. Busca no Mercado Livre (Real via API)
-    const mlResponse = await fetch(`https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=5`);
+    const mlResponse = await fetch(`https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=10`);
+    
+    if (!mlResponse.ok) {
+      throw new Error(`Erro na API do Mercado Livre: ${mlResponse.status}`);
+    }
+
     const mlData = await mlResponse.json();
     
-    const mlResults: SearchResult[] = mlData.results.map((item: any) => ({
+    // Verificação de segurança: garante que mlData.results existe e é um array
+    const mlResults: SearchResult[] = (mlData.results || []).map((item: any) => ({
       id: `ml-${item.id}`,
       title: item.title,
-      price: item.price,
+      price: item.price || 0,
       permalink: item.permalink,
-      thumbnail: item.thumbnail,
+      thumbnail: item.thumbnail?.replace("http://", "https://") || "", // Garantir HTTPS na imagem
       source: "Mercado Livre",
       condition: item.condition === "new" ? "Novo" : "Usado",
     }));
 
     results.push(...mlResults);
+
 
     // 2. Busca no Canal da Peça (Mockado para exemplo de estrutura - requer Crawler no Backend)
     // Em produção, isso seria uma chamada para /api/proxy/canaldapeca
