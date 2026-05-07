@@ -15,8 +15,10 @@ import {
   UserSquare2, 
   BarChart3, 
   Settings,
-  LogOut
+  LogOut,
+  Globe
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 const menuItems = [
