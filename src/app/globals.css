@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0F172A;
+  --color-foreground: #FFFFFF;
+  --color-primary: #2563EB;
+  --color-success: #22C55E;
+  --color-error: #EF4444;
+  --color-muted: #CBD5E1;
+  --color-card: rgba(30, 41, 59, 0.5);
+  --color-border: rgba(255, 255, 255, 0.1);
+  
+  --font-sans: Inter, system-ui, -apple-system, sans-serif;
+  
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.25rem;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .glass {
+    background: var(--color-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
+    color: var(--color-muted);
+  }
+  
+  .sidebar-item:hover {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--color-primary);
+  }
+  
+  .sidebar-item-active {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition-all active:scale-95 cursor-pointer;
+  }
+}
