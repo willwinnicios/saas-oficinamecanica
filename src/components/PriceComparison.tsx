@@ -1,19 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { searchGlobalPrices, SearchResult } from "@/lib/api-integrations";
-import { Search, ShoppingBag, ExternalLink, Loader2, AlertCircle, Filter } from "lucide-react";
+import { 
+  Search, 
+  ShoppingBag, 
+  ExternalLink, 
+  Loader2, 
+  AlertCircle, 
+  TrendingDown,
+  ChevronRight,
+  History,
+  ShieldCheck,
+  Star
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 
-interface PriceComparisonProps {
-  initialQuery?: string;
-}
+// Mock de histórico de preços (No futuro vira real)
+const mockHistory = [
+  { date: '01/05', price: 450 },
+  { date: '05/05', price: 430 },
+  { date: '10/05', price: 445 },
+  { date: '15/05', price: 410 },
+  { date: '20/05', price: 425 },
+  { date: '25/05', price: 395 },
+];
 
 export function PriceComparison({ initialQuery = "" }: PriceComparisonProps) {
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  const lowestPrice = useMemo(() => {
+    if (results.length === 0) return 0;
+    return Math.min(...results.map(r => r.price));
+  }, [results]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,108 +58,173 @@ export function PriceComparison({ initialQuery = "" }: PriceComparisonProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Search Input - Estilo Zoom */}
       <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors" size={20} />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Pesquisar peça (Mercado Livre, Canal da Peça, AutoZ...)"
-            className="w-full bg-slate-900/50 border border-border rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            placeholder="Qual peça você procura hoje?"
+            className="w-full bg-slate-900 border-2 border-border rounded-xl py-3 pl-12 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-lg"
           />
         </div>
         <button 
           type="submit" 
           disabled={loading}
-          className="btn-primary flex items-center gap-2 whitespace-nowrap"
+          className="bg-primary hover:bg-primary/90 text-white font-bold px-8 rounded-xl shadow-lg transition-all flex items-center gap-2"
         >
-          {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
-          Comparar Preços
+          {loading ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
+          Buscar
         </button>
       </form>
 
-      {hasSearched && !loading && (
-        <div className="flex items-center justify-between px-2">
-          <p className="text-xs text-muted">
-            Encontramos <span className="font-bold text-foreground">{results.length}</span> resultados ordenados por menor preço.
-          </p>
-          <div className="flex gap-2">
-            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-[10px] text-blue-400 border border-blue-500/20">Mercado Livre</span>
-            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-[10px] text-amber-400 border border-amber-500/20">C. da Peça</span>
+      {hasSearched && !loading && results.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          
+          {/* Coluna da Esquerda: Produto e Histórico */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="glass p-6 space-y-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-3">
+                 <div className="bg-success/10 text-success text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 border border-success/20">
+                    <TrendingDown size={12} />
+                    MELHOR PREÇO
+                 </div>
+              </div>
+              <div className="aspect-square bg-white rounded-xl p-4 flex items-center justify-center">
+                 <img src={results[0].thumbnail} alt={query} className="max-h-full object-contain" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold line-clamp-2">{results[0].title}</h2>
+                <div className="flex items-center gap-2 mt-2">
+                   <div className="flex text-amber-400">
+                      {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                   </div>
+                   <span className="text-xs text-muted">(42 avaliações)</span>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-border">
+                 <p className="text-xs text-muted font-medium mb-1 flex items-center gap-1 uppercase tracking-wider">
+                    <History size={14} /> 
+                    Histórico de Preços
+                 </p>
+                 <div className="h-32 w-full pt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={mockHistory}>
+                        <Line type="monotone" dataKey="price" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                        <Tooltip 
+                           contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                           itemStyle={{ color: '#fff' }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna da Direita: Lista de Lojas */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between mb-2">
+               <h3 className="font-bold flex items-center gap-2">
+                  <ShoppingBag size={18} className="text-primary" />
+                  Compare em {results.length} lojas
+               </h3>
+               <div className="text-xs text-muted">
+                  Menor preço: <span className="text-success font-bold text-sm ml-1">R$ {lowestPrice.toLocaleString('pt-BR')}</span>
+               </div>
+            </div>
+
+            <div className="space-y-3">
+              {results.map((item) => (
+                <div key={item.id} className="glass p-4 hover:border-primary/50 transition-all group flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-16 h-16 rounded bg-slate-800/50 p-2 flex items-center justify-center shrink-0">
+                      <img 
+                        src={item.source === "Mercado Livre" ? "https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.21.22/mercadolibre/logo__large_plus.png" : "https://www.canaldapeca.com.br/assets/img/logo-social.png"} 
+                        alt={item.source} 
+                        className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all" 
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-muted uppercase">{item.source}</span>
+                        {item.price === lowestPrice && (
+                          <span className="bg-success/20 text-success text-[10px] px-1.5 py-0.5 rounded font-bold">MENOR PREÇO</span>
+                        )}
+                      </div>
+                      <div className="mt-1 flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-foreground">
+                          R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-xs text-muted">no PIX</span>
+                      </div>
+                      <p className="text-[10px] text-muted">ou 10x de R$ {(item.price / 10).toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
+                     <div className="flex items-center gap-1 text-[10px] text-success font-bold mb-1">
+                        <ShieldCheck size={12} />
+                        LOJA CONFIÁVEL
+                     </div>
+                     <a 
+                      href={item.permalink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-primary text-white hover:bg-primary/90 px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 group-hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                      Ir à loja
+                      <ChevronRight size={16} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      <div className="space-y-2">
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-8 text-muted">
-            <Loader2 className="animate-spin mb-2" size={32} />
-            <p className="text-sm">Escaneando múltiplos marketplaces...</p>
-          </div>
-        )}
+      {loading && (
+        <div className="glass p-20 flex flex-col items-center justify-center space-y-4">
+           <div className="relative">
+              <Loader2 className="animate-spin text-primary" size={48} />
+              <Search className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary" size={20} />
+           </div>
+           <div className="text-center">
+              <h3 className="text-lg font-bold">Escaneando o Mercado...</h3>
+              <p className="text-muted text-sm">Buscando os melhores preços no Mercado Livre e lojas parceiras.</p>
+           </div>
+        </div>
+      )}
 
-        {!loading && hasSearched && results.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 text-muted glass">
-            <AlertCircle className="mb-2" size={32} />
-            <p className="text-sm">Nenhum resultado encontrado.</p>
-          </div>
-        )}
-
-        {results.map((item) => (
-          <div key={item.id} className="glass p-3 flex items-center justify-between hover:border-primary/30 transition-all group relative overflow-hidden">
-            {/* Source indicator bar */}
-            <div className={cn(
-              "absolute left-0 top-0 bottom-0 w-1",
-              item.source === "Mercado Livre" ? "bg-yellow-400" : 
-              item.source === "Canal da Peça" ? "bg-blue-600" : "bg-orange-500"
-            )} />
-            
-            <div className="flex items-center gap-4 pl-2">
-              <div className="w-12 h-12 rounded bg-white p-1 flex items-center justify-center shrink-0">
-                <img src={item.thumbnail} alt={item.title} className="max-w-full max-h-full object-contain" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-medium line-clamp-1">{item.title}</h4>
-                  <span className="px-1.5 py-0.5 rounded-sm bg-slate-800 text-[9px] font-bold uppercase border border-border">
-                    {item.source}
-                  </span>
-                </div>
-                <p className="text-xs text-muted flex items-center gap-2 mt-0.5">
-                  <span className="text-success font-bold text-sm">
-                    {item.price > 0 ? `R$ ${item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "Consultar Site"}
-                  </span>
-                  <span>•</span>
-                  <span>{item.condition}</span>
-                </p>
-              </div>
-            </div>
-            <a 
-              href={item.permalink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors flex items-center gap-1 group-hover:underline text-xs"
-            >
-              <span className="hidden sm:inline">Ver Loja</span>
-              <ExternalLink size={14} />
-            </a>
-          </div>
-        ))}
-
-        {!loading && !hasSearched && (
-          <div className="p-8 text-center text-muted border-2 border-dashed border-border rounded-lg">
-            <ShoppingBag className="mx-auto mb-2 opacity-20" size={48} />
-            <p className="text-sm italic">Digite o nome da peça para comparar preços online.</p>
-          </div>
-        )}
-      </div>
-
-      <div className="pt-2 flex items-center gap-2 justify-center opacity-50">
-        <span className="text-[10px] uppercase font-bold tracking-tighter">Powered by</span>
-        <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.21.22/mercadolibre/logo__large_plus.png" className="h-3 invert grayscale" alt="ML" />
-      </div>
+      {!loading && !hasSearched && (
+        <div className="glass p-16 flex flex-col items-center justify-center text-center space-y-6">
+           <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center text-primary animate-pulse">
+              <ShoppingBag size={40} />
+           </div>
+           <div className="max-w-md">
+              <h3 className="text-xl font-bold mb-2">Seu comparador de peças inteligente</h3>
+              <p className="text-muted">
+                 Economize tempo e dinheiro. Nós buscamos as peças em múltiplos marketplaces e te mostramos onde está mais barato, igual ao Zoom.
+              </p>
+           </div>
+           <div className="flex flex-wrap justify-center gap-2">
+              {['Amortecedor Civic', 'Bateria Heliar', 'Óleo 5W30', 'Pneu 175/70'].map(tag => (
+                <button 
+                  key={tag}
+                  onClick={() => { setQuery(tag); }}
+                  className="px-3 py-1.5 rounded-full bg-slate-800 border border-border text-xs text-muted hover:text-primary hover:border-primary transition-all"
+                >
+                  {tag}
+                </button>
+              ))}
+           </div>
+        </div>
+      )}
     </div>
   );
 }
+
