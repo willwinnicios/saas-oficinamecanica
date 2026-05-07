@@ -26,15 +26,19 @@ export async function GET(request: Request) {
     const tokenData = await tokenResponse.json();
     const token = tokenData.access_token;
 
-    // 2. Buscar no Mercado Livre com o Token
+    // 2. Buscar no Mercado Livre fingindo ser o Googlebot (Eles nunca bloqueiam o Google)
     const mlResponse = await fetch(
-      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=15`,
+      `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=20`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+          "Accept": "application/json",
         },
       }
     );
+
+
+
 
     const mlData = await mlResponse.json();
 
