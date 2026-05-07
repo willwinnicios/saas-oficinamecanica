@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* Configuração para garantir estabilidade máxima com Turbopack. */
+  /* Configuração para estabilidade máxima (Versão 1.0.1 - Produção) */
   reactStrictMode: true,
+
   turbopack: {
     root: process.cwd(),
   },
